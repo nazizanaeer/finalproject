@@ -4,7 +4,7 @@
 
 `code/00_clean_data.R`
 
-  - reads multiple Formula 1 datasets
+  - reads multiple Formula 1 datasets from the folder `f1_datasets/`
   - filters data for Charles Leclerc's races with Ferrari (2019-2024)
   - merges datasets and selects relevant variables 
   - creates new categorical variable based on race finish position 
