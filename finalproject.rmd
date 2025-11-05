@@ -1,0 +1,191 @@
+---
+title: "DATA550 Final Project 2"
+author: "Naziza Bhuiyan"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: TRUE
+---
+
+# Analyzing Charles Leclerc’s Race Results by Qualifying Positions with Scuderia Ferrari HP in Formula 1
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE
+  )
+```
+
+## 1. Introduction
+
+### 1.1 Description of Dataset
+
+For my final project, I will use the *[Formula 1 World Championship dataset from Kaggle](https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020/data)*, which contains comprehensive information on races, drivers, constructors, circuits, qualifying results, lap times, pit stops, and championship outcomes from 1950 through the 2024 season. This dataset provides an opportunity to explore the evolution of Formula 1 over time, including performance trends of drivers and teams, race outcomes across circuits, and shifts in competitive dominance. 
+
+### 1.2 Analytical Objectives
+
+This analysis aims to evaluate Charles Leclerc’s performance during his Ferrari career from 2019–2024, focusing on how qualifying position, especially pole position, influences race outcomes. 
+
+```{r, load-packages}
+library(tidyverse)
+library(gtsummary)
+library(dplyr)
+library(gt)
+library(ggplot2)
+library(janitor)
+library(broom)
+library(labelled)
+```
+
+### 1.3 Reading in Dataset and Filtering by Driver and Constructor
+```{r, load-datasets, echo=TRUE}
+results <- read.csv("f1_datasets/results.csv")
+races <- read.csv("f1_datasets/races.csv")
+drivers <- read.csv("f1_datasets/drivers.csv")
+qualifying <- read.csv("f1_datasets/qualifying.csv")
+circuits <- read.csv("f1_datasets/circuits.csv")
+```
+
+```{r, filter-leclerc-in-ferrari, echo=TRUE}
+
+data <- results %>%
+  left_join(races, by = "raceId") %>%
+  left_join(drivers, by = "driverId") %>%
+  left_join(qualifying, by = c("raceId", "driverId")) %>%
+  filter(driverRef == "leclerc", constructorId.x == "6")  %>% 
+  select(
+    raceId, year, round, circuitId, 
+    constructorId = constructorId.x, 
+    driverId, driverRef, surname, 
+    forename, grid, 
+    results_position = position.x,   
+    qualifying_position = position.y, 
+    positionOrder, points, laps, 
+    time = time.x, 
+    fastestLap, fastestLapTime, fastestLapSpeed, 
+    q1, q2, q3 
+  )
+```
+
+
+## 2. Descriptive Statistics
+
+### 2.1 Tabular Analysis
+
+#### Table 1: Characteristics of Charles Leclerc’s Races from 2019-2024 with Ferrari Stratified by Performance Category
+```{r, table-one}
+
+data$fastestLapSpeed <- as.numeric(data$fastestLapSpeed)
+data$results_position <- as.numeric(data$results_position)
+
+data1 <- data %>%
+  mutate(
+    performance_category = case_when(
+      results_position %in% 1:3 ~ "Podium (P1–P3)",
+      results_position %in% 4:10 ~ "Points Zone (P4–P10)",
+      results_position %in% 11:20 | is.na(results_position) ~ "Non-Scoring (P11–P20/DNF)"
+    )
+  )
+
+data1 <- data1 %>% 
+  mutate(
+    performance_category = factor(
+      performance_category,
+      levels = c("Podium (P1–P3)", "Points Zone (P4–P10)", "Non-Scoring (P11–P20/DNF)")
+    )
+  )
+
+var_label(data1) <- list(
+  qualifying_position = "Qualifying Position",
+  grid = "Starting Grid",
+  results_position = "Race Finish Position",
+  points = "Points Scored",
+  fastestLapSpeed = "Fastest Lap Speed (km/h)"
+)
+    
+table1_vars <- data1 %>%
+  select(performance_category,
+         qualifying_position, grid, results_position,
+         points, fastestLapSpeed)
+
+table1 <- table1_vars %>%
+  tbl_summary(
+    by = performance_category,  
+    statistic = list(
+      qualifying_position ~ "{median} ({p25}, {p75})",
+      grid ~ "{median} ({p25}, {p75})",
+      results_position ~ "{median} ({p25}, {p75})",
+      points ~ "{median} ({p25}, {p75})",
+      fastestLapSpeed ~ "{mean} ± {sd}"
+    ),
+    missing = "no"
+  ) %>% 
+  modify_spanning_header(all_stat_cols() ~ "**By Performance Category**") %>%
+  bold_labels() %>%
+  add_p %>% 
+  add_overall()
+
+table1
+```
+
+Table 1 summarizes the characteristics of Charles Leclerc's `r nrow(data)` races for Ferrari from 2019-2024, stratified by performance category (Podium, Points Zone, Non-Scoring). Overall, he had a median qualifying and starting position on the grid of 4 (2, 7), with a median race finish of 4 (3, 6), and median points of 12 (4, 15). Races where he finished on the podium had the best qualifying and grid positions (2 [1, 4]), highest points (18 [15, 18]), and fastest lap speeds (219 ± 20 km/h). As expected, Points Zone races showed intermediate values, while Non-Scoring races had the poorest statistics. All comparisons across categories were statistically significant (Kruskal-Wallis p < 0.05).   
+
+
+### 2.2 Graphical Analysis
+
+#### Figure 1: Scatter plot of Qualifying vs Race Finish
+```{r, scatterplot}
+ggplot(data1, aes(x = qualifying_position, y = results_position, color = performance_category)) +
+  geom_point(size = 3, alpha = 0.7) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray") + 
+    scale_color_manual(values = c(
+    "Podium (P1–P3)" = "#DC0000",       # Ferrari red
+    "Points Zone (P4–P10)" = "#FFF500", 
+    "Non-Scoring (P11–P20/DNF)" = "gray"
+      )) +
+  scale_y_reverse() +  
+  scale_x_reverse() +  
+  labs(
+    title = "Qualifying Position vs Race Finish (Leclerc, Ferrari 2019-2024)",
+    x = "Qualifying Position",
+    y = "Race Finish Position",
+    color = "Performance Category"
+  ) +
+  theme_minimal()
+```
+
+
+Figure 1 shows Charles Leclerc's qualifying position versus race finish in his Ferrari races from 2019-2024, with both axes reversed such that lower positions (better performance) appear toward the top-right. Each point represents a single race, colored by performance category (Podium, Points Zone, and Non-Scoring), with overlapping races at the same data point darkening the color. Points clustering in the top-right indicate races where Leclerc qualified and finished near the front, while points toward the bottom-left indicate poorer qualifying and race results. The dashed diagonal line represents y = x, highlighting races where finishing positions matched qualifying positions; points below the line indicate positions lost during the race, and points above the line indicate positions gained. This graph illustrates that there is a strong link between qualifying position and race outcome.
+
+
+## 3. Regression Analysis
+
+### 3.1 Logistic Regression: Probability of Win from Pole Position
+
+#### Table 2: Logistic Regression of Pole Position on Race Win (Leclerc, Ferrari 2019–2024)
+```{r, table-two}
+# Pole effect
+data1 <- data1 %>%
+  mutate(pole = ifelse(grid == 1, 1, 0),
+         win = ifelse(positionOrder == 1, 1, 0),
+         podium = ifelse(positionOrder %in% c(1,2,3), 1, 0))
+
+logit_model <- glm(win ~ pole, data = data1, family = binomial)
+tbl_logit <- tbl_regression(
+  logit_model, 
+  exponentiate = TRUE, 
+  label = list(
+    pole ~ "Started on Pole")) %>%
+  as_gt() %>%
+  tab_header(title = "Effect of Pole Position on Race Win (Leclerc, Ferrari 2019–2024)")
+
+tbl_logit
+
+```
+
+
+Logistic regression indicates that starting from pole position significantly increases Charles Leclerc’s odds of winning a race (OR = 7.86, 95% CI: 1.79–40.8, p = 0.007). The confidence interval is wide, reflecting uncertainty due to the relatively small number of wins or races from pole. Note that this model only considers pole position and does not adjust for other factors that could influence race outcomes.
+
+
+
