@@ -1,5 +1,15 @@
 # Building the Final Project Report
 
+## Project Organization
+
+  - datasets used to build this report is in folder `f1_datasets/`
+  - all code to build final report exists in the folder `code/`
+  - all outputs derived from the code will be stored in the folder `output/`
+  - `Makefile` contains rules for building the final report
+    - use command `make report.html` to build final report
+  - `renv` package used to add a lock file (`renv.lock`) and folder `renv/` to capture information on packages
+  - use make rule `install` to restore package library 
+
 ## Code Description
 
 `code/00_clean_data.R`

@@ -23,6 +23,10 @@ output/regression.rds: code/03_regression.R output/data1.rds
 .PHONY: regression_analysis
 regression_analysis: output/regression.rds
 
+.PHONY: install
+install:
+	Rscript -e "renv::restore(prompt = FALSE)"
+
 .PHONY: clean
 clean:
 	rm -f output/*.rds && rm -f output/*.png && rm -f *.html && rm -f *.html && rm -f *.pdf
