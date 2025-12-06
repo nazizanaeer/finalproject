@@ -1,3 +1,4 @@
+# REPORT-ASSOCIATED RULES
 report.html: code/04_render_report.R report.Rmd descriptive_analysis regression_analysis
 	Rscript code/04_render_report.R
 
@@ -29,4 +30,26 @@ install:
 
 .PHONY: clean
 clean:
-	rm -f output/*.rds && rm -f output/*.png && rm -f *.html && rm -f *.pdf
+	rm -f output/*.rds && rm -f output/*.png && rm -f final_report/*.html && rm -f *.html && rm -f *.pdf
+	
+# DOCKER-ASSOCIATED RULES
+
+PROJECTFILES = report.Rmd code/00_clean_data.R code/01_make_table1.R code/02_make_scatter.R \
+							 code/03_regression.R code/04_render_report.R Makefile
+
+RENVFILES = renv.lock renv/activate.R renv/settings.json
+
+# rule to build image
+project_image: Dockerfile $(PROJECTFILES) $(RENVFILES)
+	docker build -t nazizanaeer/f1_image .
+	touch $@
+	
+# rule to build the report automatically in our container 
+final_report/report.html:
+	docker run -v $$(pwd)/final_report:/project/final_report nazizanaeer/f1_image
+
+
+
+
+
+	

@@ -35,6 +35,7 @@ library(gt)
 library(ggplot2)
 library(janitor)
 library(broom)
+library(broom.helpers)
 library(labelled)
 ```
 

@@ -1,4 +1,4 @@
-here::i_am("code/03_regression.r")
+here::i_am("code/03_regression.R")
 
 data1 <- readRDS(
   file=here::here("output/data1.rds")
@@ -8,6 +8,7 @@ library(gtsummary)
 library(dplyr)
 library(gt)
 library(broom)
+library(broom.helpers)
 
 data1 <- data1 %>%
   mutate(pole = ifelse(grid == 1, 1, 0),

@@ -10,6 +10,11 @@
   - `renv` package used to add a lock file (`renv.lock`) and folder `renv/` to capture information on packages
   - use make rule `install` to restore package library 
 
+## How to build final report
+
+  - use command `make report.html` to build final report
+  - use make rule `install` to restore package library 
+
 ## Code Description
 
 `code/00_clean_data.R`
