@@ -1,19 +1,35 @@
-# Building the Final Project Report
+# F1 Final Project
+
+This repository contains the code and resources for the F1 final project.  
+It uses R, `renv`, and Docker to ensure reproducibility of analyses and automated report generation.
+
+
+## DockerHub Image
+
+  - The image is available on DockerHub: https://hub.docker.com/repository/docker/nazizanaeer/f1_image/general 
+  - You can pull it directly without building by running the following command on bash: `docker pull nazizanaeer/f1_image`
+
 
 ## Project Organization
 
-  - datasets used to build this report is in folder `f1_datasets/`
-  - all code to build final report exists in the folder `code/`
-  - all outputs derived from the code will be stored in the folder `output/`
-  - `Makefile` contains rules for building the final report
-    - use command `make report.html` to build final report
-  - `renv` package used to add a lock file (`renv.lock`) and folder `renv/` to capture information on packages
-  - use make rule `install` to restore package library 
+  - `code/` - R scripts for cdata cleaning, analysis, regression, and report rendering
+  - `f1_datasets/` - input datasets
+  - `output/` - intermediate results (tables, plots, regression outputs)
+  - `final_report/` - empty directory mounted to folder of same name in container to keep generated `report.html`
+  - `Dockerfile` - instructions for building container
+  - `Makefile` - automation rules for building, cleaning, and running project
+  - `renv.lock` - dependency lockfile for reproducible R environments 
+  - `renv/` - configuration files and scripts used by renv package manager to reproduce R environment
 
-## How to build final report
 
-  - use command `make report.html` to build final report
-  - use make rule `install` to restore package library 
+## Generating Final Report
+
+  - Use `make install` to restore package library with renv  
+  - Use `make report.html` to build report locally (requires R and all packages installed on your machine)
+  - Use `make project_image` to build docker image
+  - Use `make final_report/report.html` to build report automatically inside Docker container made from the image mentioned above (recommended for reproducibility)  
+  - Use `make clean` to remove all generated outputs and start fresh  
+
 
 ## Code Description
 
